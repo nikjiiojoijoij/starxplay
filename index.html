@@ -2,601 +2,1980 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>StarXPlay Ultimate Pro</title>
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    >
+
+    <title>StarXPlay</title>
+
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
     <style>
         :root {
-            --bg-primary: #070913;
-            --bg-secondary: #0f172a;
-            --bg-card: rgba(30, 41, 59, 0.7);
-            --accent-purple: #9333ea;
-            --accent-purple-hover: #7e22ce;
-            --accent-cyan: #38bdf8;
-            --accent-green: #22c55e;
-            --accent-red: #ef4444;
-            --text-main: #ffffff;
-            --text-muted: #94a3b8;
-            --border-color: rgba(255, 255, 255, 0.08);
+            --bg: #070913;
+            --card: rgba(23, 32, 55, 0.82);
+            --card2: rgba(15, 23, 42, 0.92);
+
+            --purple: #9333ea;
+            --purple2: #6d28d9;
+            --blue: #38bdf8;
+            --green: #22c55e;
+            --red: #ef4444;
+            --yellow: #facc15;
+
+            --text: #ffffff;
+            --muted: #94a3b8;
+            --border: rgba(255, 255, 255, 0.08);
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+
+            font-family:
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                Roboto,
+                Arial,
+                sans-serif;
+
             -webkit-tap-highlight-color: transparent;
         }
 
+        html,
         body {
-            background: var(--bg-primary);
-            color: var(--text-main);
+            min-height: 100%;
+        }
+
+        body {
+            background:
+                radial-gradient(
+                    circle at 50% -20%,
+                    rgba(68, 71, 150, 0.20),
+                    transparent 45%
+                ),
+                #070913;
+
+            color: white;
+
             display: flex;
             justify-content: center;
-            min-height: 100vh;
+
             overflow-x: hidden;
+        }
+
+        button,
+        input {
+            font: inherit;
         }
 
         .wrapper {
             width: 100%;
             max-width: 480px;
+
+            padding: 12px;
+            padding-bottom: 92px;
+
             display: flex;
             flex-direction: column;
-            padding: 12px;
+
             gap: 12px;
-            padding-bottom: 80px;
         }
 
-        /* Top Header */
+        /* =========================
+           HEADER
+        ========================== */
+
         .top-header {
+            min-height: 66px;
+
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            background: var(--bg-card);
-            backdrop-filter: blur(12px);
-            padding: 10px 14px;
-            border-radius: 14px;
-            border: 1px solid var(--border-color);
+            justify-content: space-between;
+
+            padding: 12px 15px;
+
+            background: var(--card);
+
+            border: 1px solid var(--border);
+            border-radius: 18px;
+
+            backdrop-filter: blur(14px);
         }
 
         .brand {
             display: flex;
             align-items: center;
-            gap: 6px;
+
+            gap: 7px;
+
+            font-size: 18px;
             font-weight: 900;
-            font-size: 17px;
-            letter-spacing: 0.5px;
-            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple));
+
+            letter-spacing: 0.7px;
+
+            background: linear-gradient(
+                90deg,
+                #38bdf8,
+                #8b5cf6
+            );
+
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
-        .user-balance-box {
+        .balance-box {
             display: flex;
             align-items: center;
-            gap: 6px;
-            background: rgba(15, 23, 42, 0.8);
-            padding: 6px 12px;
-            border-radius: 20px;
-            border: 1px solid rgba(56, 189, 248, 0.3);
-            font-weight: 700;
+
+            gap: 7px;
+
+            padding: 7px 13px;
+
+            border-radius: 999px;
+
+            background: rgba(15, 23, 42, 0.9);
+
+            border: 1px solid rgba(56, 189, 248, 0.30);
+
+            color: var(--blue);
+
             font-size: 14px;
-            color: var(--accent-cyan);
+            font-weight: 900;
         }
 
-        /* History Multipliers Bar */
+        /* =========================
+           HISTORY
+        ========================== */
+
         .history-row {
             display: flex;
-            gap: 6px;
+
+            gap: 7px;
+
             overflow-x: auto;
-            padding-bottom: 2px;
+
             scrollbar-width: none;
         }
-        .history-row::-webkit-scrollbar { display: none; }
+
+        .history-row::-webkit-scrollbar {
+            display: none;
+        }
 
         .history-pill {
-            background: var(--bg-card);
-            padding: 4px 10px;
-            border-radius: 8px;
-            font-size: 11px;
-            font-weight: 800;
-            white-space: nowrap;
-            border: 1px solid var(--border-color);
-        }
-        .history-pill.low { color: #facc15; }
-        .history-pill.mid { color: var(--accent-cyan); }
-        .history-pill.high { color: var(--accent-purple); }
-        .history-pill.ultra { color: var(--accent-green); }
+            flex-shrink: 0;
 
-        /* Main Game Arena */
+            padding: 5px 10px;
+
+            border-radius: 9px;
+
+            background: var(--card);
+
+            border: 1px solid var(--border);
+
+            font-size: 11px;
+            font-weight: 900;
+        }
+
+        .history-pill.low {
+            color: var(--yellow);
+        }
+
+        .history-pill.mid {
+            color: var(--blue);
+        }
+
+        .history-pill.high {
+            color: #c084fc;
+        }
+
+        .history-pill.ultra {
+            color: var(--green);
+        }
+
+        /* =========================
+           GAME CARD
+        ========================== */
+
         .arena-card {
-            background: var(--bg-card);
-            border-radius: 18px;
             padding: 12px;
-            border: 1px solid var(--border-color);
+
             display: flex;
             flex-direction: column;
+
             gap: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+
+            background: var(--card);
+
+            border-radius: 20px;
+
+            border: 1px solid var(--border);
+
+            box-shadow:
+                0 15px 45px rgba(0, 0, 0, 0.35);
         }
 
         .game-viewport {
-            background: radial-gradient(circle at center, #1e293b 0%, #090d16 100%);
-            height: 250px;
-            border-radius: 14px;
             position: relative;
+
+            height: 270px;
+
             overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border: 1px solid rgba(56, 189, 248, 0.15);
+
+            border-radius: 16px;
+
+            border: 1px solid rgba(56, 189, 248, 0.16);
+
+            background:
+                radial-gradient(
+                    circle at 50% 50%,
+                    #1e293b 0%,
+                    #0b1220 55%,
+                    #070b13 100%
+                );
         }
 
-        /* Canvas Background Grid & Stars */
         #gameCanvas {
             position: absolute;
+
             inset: 0;
+
             width: 100%;
             height: 100%;
+
             pointer-events: none;
+
+            z-index: 1;
         }
 
-        .flight-trajectory {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-        }
+        /* =========================
+           ROCKET
+        ========================== */
 
-        .rocket-object {
+        .rocket {
             position: absolute;
-            bottom: 20px;
+
             left: 20px;
-            font-size: 38px;
-            transition: transform 0.05s linear;
-            will-change: transform;
-            filter: drop-shadow(0 0 12px rgba(147, 51, 234, 0.8));
+            bottom: 18px;
+
             z-index: 5;
+
+            font-size: 40px;
+
+            line-height: 1;
+
+            transform-origin: center;
+
+            will-change: transform;
+
+            filter:
+                drop-shadow(
+                    0 0 6px rgba(56, 189, 248, 0.95)
+                )
+                drop-shadow(
+                    0 0 14px rgba(147, 51, 234, 0.75)
+                );
         }
+
+        .rocket.flying {
+            animation: rocketPulse 0.35s infinite alternate;
+        }
+
+        @keyframes rocketPulse {
+            from {
+                filter:
+                    drop-shadow(
+                        0 0 5px rgba(56, 189, 248, 0.8)
+                    )
+                    drop-shadow(
+                        0 0 10px rgba(147, 51, 234, 0.6)
+                    );
+            }
+
+            to {
+                filter:
+                    drop-shadow(
+                        0 0 10px rgba(56, 189, 248, 1)
+                    )
+                    drop-shadow(
+                        0 0 22px rgba(147, 51, 234, 1)
+                    );
+            }
+        }
+
+        /* =========================
+           CENTER HUD
+        ========================== */
 
         .center-hud {
             position: absolute;
+
+            left: 50%;
+            top: 50%;
+
+            transform: translate(-50%, -50%);
+
+            z-index: 10;
+
             display: flex;
             flex-direction: column;
             align-items: center;
-            z-index: 6;
+
             pointer-events: none;
         }
 
-        .multiplier-display {
-            font-size: 44px;
-            font-weight: 900;
-            color: #ffffff;
-            text-shadow: 0 0 20px rgba(56, 189, 248, 0.6);
-            letter-spacing: 1px;
+        .multiplier {
+            font-size: 45px;
+            font-weight: 950;
+
+            letter-spacing: 0.5px;
+
+            color: white;
+
+            text-shadow:
+                0 0 22px rgba(56, 189, 248, 0.55);
         }
 
-        .status-label {
+        .status {
+            margin-top: 3px;
+
+            color: var(--muted);
+
             font-size: 12px;
-            color: var(--text-muted);
-            text-transform: uppercase;
             font-weight: 800;
+
+            text-transform: uppercase;
+
             letter-spacing: 1.5px;
-            margin-top: 2px;
+
+            text-align: center;
         }
 
-        /* Control Panel Elements */
+        /* =========================
+           CONTROLS
+        ========================== */
+
         .control-panel {
             display: flex;
             flex-direction: column;
+
             gap: 10px;
         }
 
         .bet-box {
-            background: rgba(15, 23, 42, 0.9);
-            border-radius: 12px;
-            padding: 10px 14px;
+            min-height: 50px;
+
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            justify-content: space-between;
+
+            padding: 10px 14px;
+
+            background: rgba(15, 23, 42, 0.93);
+
             border: 1px solid #334155;
+
+            border-radius: 13px;
         }
 
         .bet-label {
+            color: var(--muted);
+
             font-size: 13px;
-            color: var(--text-muted);
-            font-weight: 700;
+            font-weight: 800;
         }
 
-        .bet-input-wrapper {
+        .bet-input-wrap {
             display: flex;
             align-items: center;
-            gap: 4px;
+
+            gap: 6px;
         }
 
         .bet-input {
-            background: transparent;
-            border: none;
-            color: white;
-            font-size: 18px;
-            font-weight: 900;
-            width: 90px;
+            width: 100px;
+
+            background: none;
+
+            border: 0;
+            outline: 0;
+
             text-align: right;
-            outline: none;
+
+            color: white;
+
+            font-size: 19px;
+            font-weight: 950;
         }
 
         .quick-chips {
             display: grid;
+
             grid-template-columns: repeat(4, 1fr);
-            gap: 6px;
+
+            gap: 7px;
         }
 
-        .chip-btn {
-            background: #1e293b;
+        .chip {
+            padding: 9px 0;
+
             border: 1px solid #334155;
-            color: var(--text-muted);
-            padding: 8px 0;
-            border-radius: 8px;
+            border-radius: 9px;
+
+            background: #1e293b;
+
+            color: var(--muted);
+
             font-size: 12px;
-            font-weight: 800;
-            cursor: pointer;
-            transition: 0.15s;
-            text-align: center;
-        }
-        .chip-btn:hover { background: #334155; color: white; }
-        .chip-btn:active { transform: scale(0.95); }
-
-        /* Big Action Buttons */
-        .btn-core {
-            width: 100%;
-            padding: 16px;
-            border-radius: 14px;
-            border: none;
-            font-size: 16px;
             font-weight: 900;
+
             cursor: pointer;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            transition: all 0.15s ease;
-        }
-        .btn-core:active { transform: scale(0.98); }
-
-        .btn-play-action {
-            background: linear-gradient(135deg, var(--accent-purple) 0%, #6b21a8 100%);
-            color: white;
-            box-shadow: 0 4px 20px rgba(147, 51, 234, 0.5);
         }
 
-        .btn-cash-action {
-            background: linear-gradient(135deg, var(--accent-red) 0%, #b91c1c 100%);
-            color: white;
-            box-shadow: 0 4px 20px rgba(239, 68, 68, 0.5);
-            display: none;
+        .chip:active {
+            transform: scale(0.96);
         }
 
-        /* Secondary Grid Sections (Bonuses & Referral) */
-        .grid-features {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            }
+        .main-btn {
+            width: 100%;
 
-        .feature-card {
-            background: var(--bg-card);
+            padding: 16px 10px;
+
+            border: 0;
+
             border-radius: 14px;
+
+            color: white;
+
+            font-size: 16px;
+            font-weight: 950;
+
+            letter-spacing: 0.5px;
+
+            cursor: pointer;
+
+            text-transform: uppercase;
+        }
+
+        .main-btn:active {
+            transform: scale(0.985);
+        }
+
+        .play-btn {
+            background:
+                linear-gradient(
+                    135deg,
+                    #a21caf,
+                    #7c3aed,
+                    #6d28d9
+                );
+
+            box-shadow:
+                0 5px 22px rgba(147, 51, 234, 0.45);
+        }
+
+        .cash-btn {
+            display: none;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #22c55e,
+                    #16a34a
+                );
+
+            box-shadow:
+                0 5px 22px rgba(34, 197, 94, 0.35);
+        }
+
+        /* =========================
+           FEATURES
+        ========================== */
+
+        .features {
+            display: grid;
+
+            grid-template-columns: 1fr 1fr;
+
+            gap: 10px;
+        }
+
+        .feature {
             padding: 12px;
-            border: 1px solid var(--border-color);
+
             display: flex;
             flex-direction: column;
-            gap: 8px;
-            position: relative;
-            overflow: hidden;
+
+            gap: 9px;
+
+            background: var(--card);
+
+            border: 1px solid var(--border);
+            border-radius: 15px;
         }
 
         .feature-title {
+            color: var(--muted);
+
             font-size: 11px;
-            font-weight: 800;
-            color: var(--text-muted);
-            letter-spacing: 0.5px;
+            font-weight: 900;
         }
 
-        .feature-action-btn {
-            background: var(--accent-purple);
+        .feature-btn {
+            padding: 9px;
+
+            border: 0;
+            border-radius: 9px;
+
+            background: var(--purple);
+
             color: white;
-            border: none;
-            padding: 8px;
-            border-radius: 8px;
-            font-weight: 800;
-            font-size: 12px;
-            cursor: pointer;
-            transition: 0.15s;
-        }
-        .feature-action-btn.blue { background: #2563eb; }
-        .feature-action-btn:active { transform: scale(0.96); }
 
-        /* Bottom Navigation Menu Bar */
+            font-size: 12px;
+            font-weight: 900;
+
+            cursor: pointer;
+        }
+
+        .feature-btn.blue {
+            background: #2563eb;
+        }
+
+        /* =========================
+           BOTTOM NAV
+        ========================== */
+
         .bottom-nav {
             position: fixed;
-            bottom: 0;
+
             left: 50%;
+            bottom: 0;
+
             transform: translateX(-50%);
+
             width: 100%;
             max-width: 480px;
-            background: rgba(15, 23, 42, 0.95);
-            backdrop-filter: blur(16px);
-            border-top: 1px solid var(--border-color);
+
+            padding: 10px 4px 12px;
+
             display: flex;
             justify-content: space-around;
-            padding: 10px 6px;
+
+            background: rgba(15, 23, 42, 0.96);
+
+            border-top: 1px solid var(--border);
+
+            backdrop-filter: blur(18px);
+
             z-index: 100;
         }
 
         .nav-item {
+            flex: 1;
+
             display: flex;
             flex-direction: column;
             align-items: center;
+
             gap: 3px;
-            background: transparent;
-            border: none;
-            color: var(--text-muted);
-            font-size: 10px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: 0.2s;
-            flex: 1;
+
+            border: 0;
+
+            background: none;
+
+            color: var(--muted);
+
+            font-size: 9px;
+            font-weight: 800;
         }
-        .nav-item span.icon { font-size: 18px; }
-        .nav-item.active { color: var(--accent-cyan); }
+
+        .nav-icon {
+            font-size: 18px;
+        }
+
+        .nav-item.active {
+            color: var(--blue);
+        }
     </style>
 </head>
+
 <body>
 
-    <div class="wrapper">
-        <!-- Top Header Bar -->
-        <div class="top-header">
-            <div class="brand"><span>🚀</span> STARXPLAY</div>
-            <div class="user-balance-box">
-                <span>⭐</span> <span id="balanceVal">1500</span>
-            </div>
+<div class="wrapper">
+
+    <!-- HEADER -->
+    <header class="top-header">
+
+        <div class="brand">
+            🚀 STARXPLAY
         </div>
 
-        <!-- History Bar -->
-        <div class="history-row" id="historyRow">
-            <div class="history-pill low">1.12x</div>
-            <div class="history-pill mid">2.34x</div>
-            <div class="history-pill high">5.67x</div>
-            <div class="history-pill ultra">12.4x</div>
-            <div class="history-pill low">1.04x</div>
+        <div class="balance-box">
+            ⭐
+            <span id="balanceVal">1500</span>
         </div>
 
-        <!-- Main Game Arena -->
-        <div class="arena-card">
-            <div class="game-viewport" id="gameViewport">
-                <canvas id="gameCanvas"></canvas>
-                <div class="rocket-object" id="rocketObj">🚀</div>
-                <div class="center-hud">
-                    <div class="multiplier-display" id="multiplierView">1.00x</div>
-                    <div class="status-label" id="statusView">Готов к запуску</div>
-                </div>
-            </div>
+    </header>
 
-            <!-- Controls -->
-            <div class="control-panel">
-                <div class="bet-box">
-                    <span class="bet-label">Сумма ставки:</span>
-                    <div class="bet-input-wrapper">
-                        <input type="number" id="betField" class="bet-input" value="100">
-                        <span style="color: var(--text-muted); font-size: 14px;">⭐</span>
-                    </div>
-                </div>
 
-                <div class="quick-chips">
-                    <button class="chip-btn" onclick="modifyBet(10)">+10</button>
-                    <button class="chip-btn" onclick="modifyBet(50)">+50</button>
-                    <button class="chip-btn" onclick="modifyBet(100)">+100</button>
-                    <button class="chip-btn" onclick="modifyBet(500)">+500</button>
-                </div>
-                <button class="btn-core btn-play-action" id="playBtn" onclick="initiateFlight()">СДЕЛАТЬ СТАВКУ</button>
-                <button class="btn-core btn-cash-action" id="cashBtn" onclick="triggerCashout()">ЗАБРАТЬ <span id="winPreview">0</span> ⭐</button>
-            </div>
-        </div>
+    <!-- HISTORY -->
+    <div class="history-row" id="historyRow">
 
-        <!-- Feature Cards -->
-        <div class="grid-features">
-            <div class="feature-card">
-                <div class="feature-title">🎁 ЕЖЕДНЕВНЫЙ БОНУС</div>
-                <button class="feature-action-btn" onclick="claimDailyBonus()">Забрать</button>
-            </div>
-            <div class="feature-card">
-                <div class="feature-title">👥 РЕФЕРАЛЫ</div>
-                <button class="feature-action-btn blue" onclick="shareRefLink()">Пригласить</button>
-            </div>
-        </div>
+        <div class="history-pill low">1.12x</div>
+        <div class="history-pill mid">2.34x</div>
+        <div class="history-pill high">5.67x</div>
+        <div class="history-pill ultra">12.4x</div>
+        <div class="history-pill low">1.04x</div>
+
     </div>
 
-    <!-- Bottom Navigation Bar -->
-    <nav class="bottom-nav">
-        <button class="nav-item active"><span class="icon">🎮</span>Игра</button>
-        <button class="nav-item" onclick="alert('Раздел бонусов в разработке')"><span class="icon">🎁</span>Бонусы</button>
-        <button class="nav-item" onclick="alert('Реферальная система активна')"><span class="icon">🤝</span>Рефералы</button>
-        <button class="nav-item" onclick="alert('Статистика игроков')"><span class="icon">📊</span>Статистика</button>
-        <button class="nav-item" onclick="alert('Поддержка 24/7')"><span class="icon">💬</span>Саппорт</button>
-    </nav>
 
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand();
+    <!-- GAME -->
+    <main class="arena-card">
 
-        let userBalance = 1500;
-        let activeBet = 0;
-        let currentMultiplier = 1.00;
-        let gameLoopTimer = null;
-        let gameActive = false;
-        let targetCrash = 1.00;
+        <div class="game-viewport" id="gameViewport">
 
-        const balanceView = document.getElementById('balanceVal');
-        const multiplierView = document.getElementById('multiplierView');
-        const statusView = document.getElementById('statusView');
-        const rocketObj = document.getElementById('rocketObj');
-        const betField = document.getElementById('betField');
-        const playBtn = document.getElementById('playBtn');
-        const cashBtn = document.getElementById('cashBtn');
-        const winPreview = document.getElementById('winPreview');
-        const historyRow = document.getElementById('historyRow');
+            <canvas id="gameCanvas"></canvas>
 
-        // Canvas setup for stars and background trajectory line
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        let width, height;
-        let stars = [];
+            <div
+                class="rocket"
+                id="rocket"
+            >
+                🚀
+            </div>
 
-        function resizeCanvas() {
-            width = canvas.parentElement.clientWidth;
-            height = canvas.parentElement.clientHeight;
-            canvas.width = width;
-            canvas.height = height;
+            <div class="center-hud">
+
+                <div
+                    class="multiplier"
+                    id="multiplierView"
+                >
+                    1.00x
+                </div>
+
+                <div
+                    class="status"
+                    id="statusView"
+                >
+                    Готов к запуску
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- CONTROLS -->
+        <div class="control-panel">
+
+            <div class="bet-box">
+
+                <span class="bet-label">
+                    Сумма ставки:
+                </span>
+
+                <div class="bet-input-wrap">
+
+                    <input
+                        id="betField"
+                        class="bet-input"
+                        type="number"
+                        min="1"
+                        value="100"
+                    >
+
+                    <span>⭐</span>
+
+                </div>
+
+            </div>
+
+
+            <div class="quick-chips">
+
+                <button
+                    class="chip"
+                    onclick="modifyBet(10)"
+                >
+                    +10
+                </button>
+
+                <button
+                    class="chip"
+                    onclick="modifyBet(50)"
+                >
+                    +50
+                </button>
+
+                <button
+                    class="chip"
+                    onclick="modifyBet(100)"
+                >
+                    +100
+                </button>
+
+                <button
+                    class="chip"
+                    onclick="modifyBet(500)"
+                >
+                    +500
+                </button>
+
+            </div>
+
+
+            <button
+                class="main-btn play-btn"
+                id="playBtn"
+                onclick="startGame()"
+            >
+                Сделать ставку
+            </button>
+
+
+            <button
+                class="main-btn cash-btn"
+                id="cashBtn"
+                onclick="cashOut()"
+            >
+                Забрать
+                <span id="winPreview">0</span>
+                ⭐
+            </button>
+
+        </div>
+
+    </main>
+
+
+    <!-- EXTRA -->
+    <section class="features">
+
+        <div class="feature">
+
+            <div class="feature-title">
+                🎁 ЕЖЕДНЕВНЫЙ БОНУС
+            </div>
+
+            <button
+                class="feature-btn"
+                onclick="claimBonus()"
+            >
+                Забрать
+            </button>
+
+        </div>
+
+
+        <div class="feature">
+
+            <div class="feature-title">
+                👥 РЕФЕРАЛЫ
+            </div>
+
+            <button
+                class="feature-btn blue"
+                onclick="shareReferral()"
+            >
+                Пригласить
+            </button>
+
+        </div>
+
+    </section>
+
+</div>
+
+
+<!-- NAVIGATION -->
+<nav class="bottom-nav">
+
+    <button class="nav-item active">
+        <span class="nav-icon">🎮</span>
+        Игра
+    </button>
+
+    <button
+        class="nav-item"
+        onclick="alert('Раздел бонусов в разработке')"
+    >
+        <span class="nav-icon">🎁</span>
+        Бонусы
+    </button>
+
+    <button
+        class="nav-item"
+        onclick="alert('Реферальная система')"
+    >
+        <span class="nav-icon">🤝</span>
+        Рефералы
+    </button>
+
+    <button
+        class="nav-item"
+        onclick="alert('Статистика игроков')"
+    >
+        <span class="nav-icon">📊</span>
+        Статистика
+    </button>
+
+    <button
+        class="nav-item"
+        onclick="alert('Поддержка')"
+        >
+        <span class="nav-icon">💬</span>
+        Саппорт
+    </button>
+
+</nav>
+
+
+<script>
+
+    /* ===================================
+       TELEGRAM WEB APP
+    ==================================== */
+
+    try {
+
+        if (
+            window.Telegram &&
+            window.Telegram.WebApp
+        ) {
+
+            const tg = window.Telegram.WebApp;
+
+            tg.ready();
+            tg.expand();
+
         }
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
 
-        // Initialize star field background
-        for (let i = 0; i < 40; i++) {
+    } catch (error) {
+
+        console.log(
+            "Telegram WebApp unavailable",
+            error
+        );
+
+    }
+
+
+    /* ===================================
+       ELEMENTS
+    ==================================== */
+
+    const balanceVal =
+        document.getElementById(
+            "balanceVal"
+        );
+
+    const multiplierView =
+        document.getElementById(
+            "multiplierView"
+        );
+
+    const statusView =
+        document.getElementById(
+            "statusView"
+        );
+
+    const rocket =
+        document.getElementById(
+            "rocket"
+        );
+
+    const betField =
+        document.getElementById(
+            "betField"
+        );
+
+    const playBtn =
+        document.getElementById(
+            "playBtn"
+        );
+
+    const cashBtn =
+        document.getElementById(
+            "cashBtn"
+        );
+
+    const winPreview =
+        document.getElementById(
+            "winPreview"
+        );
+
+    const historyRow =
+        document.getElementById(
+            "historyRow"
+        );
+
+    const gameViewport =
+        document.getElementById(
+            "gameViewport"
+        );
+
+
+    /* ===================================
+       CANVAS
+    ==================================== */
+
+    const canvas =
+        document.getElementById(
+            "gameCanvas"
+        );
+
+    const ctx =
+        canvas.getContext("2d");
+
+
+    let canvasWidth = 0;
+    let canvasHeight = 0;
+
+    let stars = [];
+
+
+    function resizeCanvas() {
+
+        const rect =
+            gameViewport.getBoundingClientRect();
+
+        canvasWidth = rect.width;
+        canvasHeight = rect.height;
+
+        const ratio =
+            window.devicePixelRatio || 1;
+
+        canvas.width =
+            canvasWidth * ratio;
+
+        canvas.height =
+            canvasHeight * ratio;
+
+        canvas.style.width =
+            canvasWidth + "px";
+
+        canvas.style.height =
+            canvasHeight + "px";
+
+        ctx.setTransform(
+            ratio,
+            0,
+            0,
+            ratio,
+            0,
+            0
+        );
+
+        createStars();
+
+    }
+
+
+    function createStars() {
+
+        stars = [];
+
+        for (
+            let i = 0;
+            i < 55;
+            i++
+        ) {
+
             stars.push({
-                x: Math.random() * width,
-                y: Math.random() * height,
-                size: Math.random() * 2,
-                alpha: Math.random()
+
+                x:
+                    Math.random() *
+                    canvasWidth,
+
+                y:
+                    Math.random() *
+                    canvasHeight,
+
+                size:
+                    Math.random() * 1.8
+                    + 0.4,
+
+                alpha:
+                    Math.random() * 0.6
+                    + 0.2
+
             });
+
         }
 
-        function drawBackground() {
-            ctx.clearRect(0, 0, width, height);
-            ctx.fillStyle = '#ffffff';
-            stars.forEach(s => {
-                ctx.globalAlpha = s.alpha;
-                ctx.fillRect(s.x, s.y, s.size, s.size);
-            });
-            ctx.globalAlpha = 1.0;
+    }
+
+
+    function drawStars() {
+
+        for (
+            const star of stars
+        ) {
+
+            ctx.fillStyle =
+                rgba(255,255,255,${star.alpha});
+
+            ctx.fillRect(
+                star.x,
+                star.y,
+                star.size,
+                star.size
+            );
+
         }
 
-        function modifyBet(amount) {
-            let current = parseInt(betField.value) || 0;
-            betField.value = current + amount;
+    }
+
+
+    /* ===================================
+       GAME VARIABLES
+    ==================================== */
+
+    let userBalance = 1500;
+
+    let activeBet = 0;
+
+    let currentMultiplier = 1;
+
+    let targetCrash = 1;
+
+    let gameActive = false;
+
+    let animationFrame = null;
+
+    let startTime = 0;
+
+    let previousRocketX = 20;
+    let previousRocketY = 0;
+
+
+    /* ===================================
+       BET
+    ==================================== */
+
+    function modifyBet(amount) {
+
+        if (gameActive) {
+            return;
         }
 
-        function initiateFlight() {
-            let betVal = parseInt(betField.value);
-            if (isNaN(betVal)  betVal <= 0  betVal > userBalance) {
-                alert('Некорректная сумма ставки!');
-                return;
-            }
+        const current =
+            Number(
+                betField.value
+            ) || 0;
+        const newAmount =
+            current + amount;
 
-            userBalance -= betVal;
-            activeBet = betVal;
-            balanceView.innerText = userBalance;
+        betField.value =
+            Math.min(
+                newAmount,
+                userBalance
+            );
 
-            playBtn.style.display = 'none';
-            cashBtn.style.display = 'block';
+    }
 
-    betField.disabled = true;
 
-            currentMultiplier = 1.00;
-            gameActive = true;
-            statusView.innerText = "Ракета набирает высоту...";
-            targetCrash = parseFloat((Math.random() * 4.5 + 1.1).toFixed(2));
+    /* ===================================
+       CRASH GENERATOR
+    ==================================== */
 
-            let progressX = 0;
-            let progressY = 0;
+    function generateCrashPoint() {
 
-            gameLoopTimer = setInterval(() => {
-                currentMultiplier += 0.035;
-                multiplierView.innerText = currentMultiplier.toFixed(2) + 'x';
+        const random =
+            Math.random();
 
-                let potentialWin = Math.floor(activeBet * currentMultiplier);
-                winPreview.innerText = potentialWin;
+        /*
+            Большинство игр заканчиваются
+            между 1.2x и 4x.
 
-                if (progressX < width - 80) progressX += 1.6;
-                if (progressY < height - 90) progressY += 1.2;
+            Иногда коэффициент выше.
+        */
 
-                rocketObj.style.transform = translate(${progressX}px, -${progressY}px) rotate(22deg);
+        if (random < 0.50) {
 
-                // Draw curve trail
-                ctx.strokeStyle = 'rgba(147, 51, 234, 0.5)';
-                ctx.lineWidth = 3;
-                ctx.beginPath();
-                ctx.moveTo(20, height - 20);
-                ctx.lineTo(20 + progressX, (height - 20) - progressY);
-                ctx.stroke();
+            return Number(
+                (
+                    1.20 +
+                    Math.random() * 1.5
+                ).toFixed(2)
+            );
 
-                if (currentMultiplier >= targetCrash) {
-                    finishGame(false, 0);
-                }
-            }, 80);
         }
 
-        function triggerCashout() {
-            if (!gameActive) return;
-            let payout = Math.floor(activeBet * currentMultiplier);
-            userBalance += payout;
-            balanceView.innerText = userBalance;
-            finishGame(true, payout);
+        if (random < 0.85) {
+
+            return Number(
+                (
+                    2.70 +
+                    Math.random() * 3.3
+                ).toFixed(2)
+            );
+
         }
 
-        function finishGame(success, reward) {
-            clearInterval(gameLoopTimer);
-            gameActive = false;
-            cashBtn.style.display = 'none';
-            playBtn.style.display = 'block';
-            betField.disabled = false;
+        return Number(
+            (
+                6 +
+                Math.random() * 8
+            ).toFixed(2)
+        );
 
-            let pillClass = 'low';
-            if (currentMultiplier >= 2) pillClass = 'mid';
-            if (currentMultiplier >= 4) pillClass = 'high';
-            if (currentMultiplier >= 8) pillClass = 'ultra';
+    }
 
-            let newPill = document.createElement('div');
-            newPill.className = history-pill ${pillClass};
-            newPill.innerText = currentMultiplier.toFixed(2) + 'x';
-            historyRow.prepend(newPill);
-            if (historyRow.children.length > 8) historyRow.lastChild.remove();
 
-            if (success) {
-                statusView.innerText = Успех! +${reward} ⭐;
-                multiplierView.style.color = 'var(--accent-green)';
-                rocketObj.innerHTML = '🌕';
-            } else {
-                statusView.innerText = Краш! Ракета улетела 💥;
-                multiplierView.style.color = 'var(--accent-red)';
-                rocketObj.innerHTML = '💥';
-            }
+    /* ===================================
+       START GAME
+    ==================================== */
 
-            setTimeout(() => {
-                multiplierView.style.color = '#ffffff';
-                multiplierView.innerText = '1.00x';
-                rocketObj.innerHTML = '🚀';
-                rocketObj.style.transform = 'translate(0px, 0px) rotate(0deg)';
-                statusView.innerText = "Готов к запуску";
-            }, 3000);
+    function startGame() {
+
+        if (gameActive) {
+            return;
         }
 
-        function claimDailyBonus() {
-            userBalance += 200;
-            balanceView.innerText = userBalance;
-            alert('Бонус +200 ⭐ успешно зачислен на баланс!');
+
+        const bet =
+            Number(
+                betField.value
+            );
+
+
+        if (
+            !Number.isFinite(bet) ||
+            bet <= 0
+        ) {
+
+            alert(
+                "Введите корректную сумму ставки"
+            );
+
+            return;
+
         }
 
-        function shareRefLink() {
-            alert('Реферальная ссылка скопирована в буфер обмена!');
+
+        if (
+            bet > userBalance
+        ) {
+
+            alert(
+                "Недостаточно звёзд"
+            );
+
+            return;
+
         }
 
-        // Animation frame loop for background stars
-        function renderLoop() {
-            drawBackground();
-            requestAnimationFrame(renderLoop);
+
+        activeBet =
+            Math.floor(bet);
+
+
+        userBalance -=
+            activeBet;
+
+
+        balanceVal.textContent =
+            userBalance;
+
+
+        currentMultiplier =
+            1;
+
+
+        targetCrash =
+            generateCrashPoint();
+
+
+        gameActive =
+            true;
+
+
+        betField.disabled =
+            true;
+
+
+        playBtn.style.display =
+            "none";
+
+
+        cashBtn.style.display =
+            "block";
+
+
+        statusView.textContent =
+            "Ракета набирает высоту";
+
+
+        multiplierView.textContent =
+            "1.00x";
+
+
+        multiplierView.style.color =
+            "#ffffff";
+
+
+        rocket.textContent =
+            "🚀";
+
+
+        rocket.classList.add(
+            "flying"
+        );
+
+
+        rocket.style.transform =
+            "translate(0px, 0px) rotate(-12deg)";
+
+
+        previousRocketX =
+            20;
+
+
+        previousRocketY =
+            canvasHeight - 30;
+
+
+        startTime =
+            performance.now();
+
+
+        if (
+            animationFrame
+        ) {
+
+            cancelAnimationFrame(
+                animationFrame
+            );
+
         }
-        renderLoop();
-    </script>
+
+
+        animationFrame =
+            requestAnimationFrame(
+                gameLoop
+            );
+
+    }
+
+
+    /* ===================================
+       MAIN ANIMATION
+    ==================================== */
+
+    function gameLoop(now) {
+
+        if (!gameActive) {
+            return;
+        }
+
+
+        /*
+            Время игры в секундах
+        */
+
+        const elapsed =
+            (now - startTime) /
+            1000;
+
+
+        /*
+            Коэффициент растёт постепенно.
+            Чем дольше полёт,
+            тем быстрее рост.
+        */
+
+        currentMultiplier =
+            1 +
+            elapsed * 0.38 +
+            elapsed * elapsed * 0.055;
+
+
+        /*
+            Ограничиваем до точки краша
+        */
+
+        if (
+            currentMultiplier >
+            targetCrash
+        ) {
+
+            currentMultiplier =
+                targetCrash;
+
+        }
+
+
+        multiplierView.textContent =
+            currentMultiplier
+                .toFixed(2)
+            + "x";
+
+
+        const potentialWin =
+            Math.floor(
+                activeBet *
+                currentMultiplier
+            );
+
+
+        winPreview.textContent =
+            potentialWin;
+
+
+        /*
+        ============================
+            ДВИЖЕНИЕ РАКЕТЫ
+            ============================
+
+            progress увеличивается
+            от 0 примерно к 1.
+
+            X двигается вправо.
+
+            Y сначала медленно,
+            потом быстрее вверх.
+        */
+
+
+        const flightProgress =
+            Math.min(
+                elapsed / 5,
+                1
+            );
+
+
+        const maxX =
+            canvasWidth - 88;
+
+
+        const maxY =
+            canvasHeight - 88;
+
+
+        /*
+            Горизонтальное движение
+        */
+
+        const rocketX =
+            20 +
+            maxX *
+            flightProgress;
+
+
+        /*
+            Вертикальная дуга.
+
+            Math.pow делает
+            набор высоты плавным.
+        */
+
+        const rocketRise =
+            maxY *
+            Math.pow(
+                flightProgress,
+                0.72
+            );
+
+
+        /*
+            Небольшое покачивание
+        */
+
+        const wave =
+            Math.sin(
+                elapsed * 5
+            ) * 3;
+
+
+        /*
+            transform Y отрицательный,
+            поэтому ракета летит ВВЕРХ.
+        */
+
+        rocket.style.transform =
+            `
+            translate(
+                ${rocketX - 20}px,
+                ${-(rocketRise + wave)}px
+            )
+            rotate(-15deg)
+            `;
+
+
+        /*
+            Текущие координаты
+            для следа.
+        */
+
+        const drawX =
+            rocketX + 17;
+
+
+        const drawY =
+            canvasHeight -
+            28 -
+            rocketRise -
+            wave;
+
+
+        /*
+            Перерисовываем Canvas.
+        */
+
+        ctx.clearRect(
+            0,
+            0,
+            canvasWidth,
+            canvasHeight
+        );
+
+
+        drawStars();
+
+
+        /*
+            Рисуем красивый
+            светящийся след.
+        */
+
+        drawTrajectory(
+            flightProgress,
+            elapsed
+        );
+
+
+        /*
+            Яркая точка
+            возле двигателя.
+        */
+
+        ctx.beginPath();
+
+        ctx.arc(
+            drawX - 8,
+            drawY + 12,
+            3.5,
+            0,
+            Math.PI * 2
+        );
+
+        ctx.fillStyle =
+            "#38bdf8";
+
+        ctx.shadowColor =
+            "#9333ea";
+
+        ctx.shadowBlur =
+            18;
+
+        ctx.fill();
+
+        ctx.shadowBlur =
+            0;
+
+
+        /*
+            Проверяем краш.
+        */
+
+        if (
+            currentMultiplier >=
+            targetCrash
+        ) {
+
+            crashGame();
+
+            return;
+
+        }
+
+
+        animationFrame =
+            requestAnimationFrame(
+                gameLoop
+            );
+
+    }
+
+
+    /* ===================================
+       TRAJECTORY
+    ==================================== */
+
+    function drawTrajectory(
+        progress,
+        elapsed
+    ) {
+
+        if (
+            progress <= 0
+        ) {
+            return;
+        }
+
+
+        const startX =
+            32;
+
+
+        const startY =
+            canvasHeight - 25;
+
+
+        const maxX =
+            canvasWidth - 88;
+
+
+        const maxY =
+            canvasHeight - 88;
+
+
+        const endX =
+            20 +
+            maxX *
+            progress;
+
+
+        const rise =
+            maxY *
+            Math.pow(
+                progress,
+                0.72
+            );
+
+
+        const endY =
+            canvasHeight -
+            28 -
+            rise -
+            Math.sin(elapsed * 5) * 3;
+
+
+        /*
+            Градиент линии.
+        */
+
+        const gradient =
+            ctx.createLinearGradient(
+                startX,
+                startY,
+                endX,
+                endY
+            );
+
+
+        gradient.addColorStop(
+            0,
+            "rgba(147,51,234,0.05)"
+        );
+
+
+        gradient.addColorStop(
+            0.55,
+            "rgba(147,51,234,0.75)"
+        );
+
+
+        gradient.addColorStop(
+            1,
+            "rgba(56,189,248,1)"
+        );
+
+
+        ctx.beginPath();
+
+
+        ctx.moveTo(
+            startX,
+            startY
+        );
+
+
+        /*
+            Безье-кривая создаёт
+            плавную дугу.
+        */
+
+        ctx.quadraticCurveTo(
+
+            startX +
+            (endX - startX) *
+            0.55,
+
+            startY -
+            rise *
+            0.20,
+
+            endX,
+            endY
+
+        );
+
+
+        ctx.strokeStyle =
+            gradient;
+
+
+        ctx.lineWidth =
+            4;
+
+
+        ctx.lineCap =
+            "round";
+
+
+        ctx.shadowColor =
+            "#9333ea";
+
+
+        ctx.shadowBlur =
+            14;
+
+
+        ctx.stroke();
+
+
+        ctx.shadowBlur =
+            0;
+
+    }
+
+
+    /* ===================================
+       CASH OUT
+    ==================================== */
+
+    function cashOut() {
+
+        if (!gameActive) {
+            return;
+        }
+
+
+        const payout =
+            Math.floor(
+                activeBet *
+                currentMultiplier
+            );
+
+
+        userBalance +=
+            payout;
+
+
+        balanceVal.textContent =
+            userBalance;
+
+
+        finishGame(
+            true,
+            payout
+        );
+
+    }
+
+
+    /* ===================================
+       CRASH
+    ==================================== */
+
+    function crashGame() {
+
+        finishGame(
+            false,
+            0
+        );
+
+    }
+
+
+    /* ===================================
+       FINISH GAME
+    ==================================== */
+
+    function finishGame(
+        success,
+        reward
+    ) {
+
+        if (!gameActive) {
+            return;
+        }
+
+
+        gameActive =
+            false;
+
+
+        if (
+            animationFrame
+        ) {
+
+            cancelAnimationFrame(
+                animationFrame
+            );
+
+        }
+
+
+        rocket.classList.remove(
+            "flying"
+        );
+
+
+        cashBtn.style.display =
+            "none";
+
+
+        playBtn.style.display =
+            "block";
+
+
+        betField.disabled =
+            false;
+
+
+        addHistory(
+            currentMultiplier
+        );
+
+
+        if (success) {
+
+            multiplierView.style.color =
+                "#22c55e";
+
+
+            statusView.textContent =
+                Выигрыш +${reward} ⭐;
+
+
+            rocket.textContent =
+                "🌕";
+
+        }
+
+        else {
+
+            multiplierView.style.color =
+                "#ef4444";
+
+
+            statusView.textContent =
+                "КРАШ 💥";
+
+
+            rocket.textContent =
+                "💥";
+
+        }
+
+
+        setTimeout(
+            resetGameVisuals,
+            2500
+        );
+
+    }
+
+
+    /* ===================================
+       RESET
+    ==================================== */
+
+    function resetGameVisuals() {
+
+        /*
+            Если новая игра уже началась,
+            старый таймер ничего
+            не должен сбрасывать.
+        */
+
+        if (gameActive) {
+            return;
+        }
+
+
+        currentMultiplier =
+            1;
+
+
+        multiplierView.textContent =
+            "1.00x";
+
+
+        multiplierView.style.color =
+            "#ffffff";
+
+
+        statusView.textContent =
+            "Готов к запуску";
+
+
+        rocket.textContent =
+            "🚀";
+
+
+        rocket.style.transform =
+            "translate(0px, 0px) rotate(-12deg)";
+
+
+        ctx.clearRect(
+            0,
+            0,
+            canvasWidth,
+            canvasHeight
+        );
+
+
+        drawStars();
+
+    }
+
+
+    /* ===================================
+       HISTORY
+    ==================================== */
+
+    function addHistory(
+        multiplier
+    ) {
+
+        let className =
+            "low";
+
+
+        if (
+            multiplier >= 2
+        ) {
+
+            className =
+                "mid";
+
+        }
+
+
+        if (
+            multiplier >= 4
+        ) {
+
+            className =
+                "high";
+
+        }
+
+
+        if (
+            multiplier >= 8
+        ) {
+
+            className =
+                "ultra";
+
+        }
+
+
+        const pill =
+            document.createElement(
+                "div"
+            );
+
+
+        pill.className =
+            history-pill ${className};
+
+
+        pill.textContent =
+            multiplier
+                .toFixed(2)
+            + "x";
+
+
+        historyRow.prepend(
+            pill
+        );
+
+
+        while (
+            historyRow.children.length >
+            8
+        ) {
+
+            historyRow.lastElementChild
+                .remove();
+
+        }
+
+    }
+
+
+    /* ===================================
+       BONUS
+    ==================================== */
+
+    function claimBonus() {
+
+        userBalance +=
+            200;
+
+
+        balanceVal.textContent =
+            userBalance;
+
+
+        alert(
+            "Вы получили +200 ⭐"
+        );
+
+    }
+
+
+    /* ===================================
+       REFERRAL
+    ==================================== */
+
+    function shareReferral() {
+
+        alert(
+            "Реферальная ссылка будет здесь"
+        );
+
+    }
+
+
+    /* ===================================
+       INITIALIZE
+    ==================================== */
+
+    resizeCanvas();
+
+    drawStars();
+
+
+    window.addEventListener(
+        "resize",
+        () => {
+
+            resizeCanvas();
+
+            ctx.clearRect(
+                0,
+                0,
+                canvasWidth,
+                canvasHeight
+            );
+
+            drawStars();
+
+        }
+    );
+
+</script>
+
 </body>
 </html>
