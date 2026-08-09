@@ -3,47 +3,232 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StarXPlay</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { background: #0d0415; color: #fff; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-        .multiplier { font-size: 80px; font-weight: 900; color: #b06ab3; }
-        input { padding: 15px; border-radius: 10px; border: none; margin: 20px 0; width: 80%; text-align: center; }
-        button { padding: 15px 40px; border-radius: 10px; border: none; background: #667eea; color: white; font-weight: bold; cursor: pointer; }
+        body {
+            background-color: #0f172a;
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        .balance-card {
+            background: #1e293b;
+            padding: 12px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        .game-screen {
+            background: #1e293b;
+            height: 240px;
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: flex-start;
+            position: relative;
+            margin-bottom: 20px;
+            overflow: hidden;
+            border: 2px solid #334155;
+            padding: 20px;
+        }
+        /* Линия траектории полета */
+        .flight-line {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            width: 80%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #38bdf8);
+            transform: rotate(-35deg);
+            transform-origin: left bottom;
+            opacity: 0.3;
+        }
+        .rocket-container {
+            position: absolute;
+            bottom: 15px;
+            left: 15px;
+            font-size: 36px;
+            transition: transform 0.1s linear;
+            will-change: transform;
+        }
+        .multiplier {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 32px;
+            font-weight: bold;
+            color: #38bdf8;
+        }
+        .status-text {
+            position: absolute;
+            bottom: 15px;
+            left: 20px;
+            color: #94a3b8;
+            font-size: 14px;
+        }
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        input {
+            width: 100%;
+            padding: 14px;
+            border-radius: 10px;
+            border: 1px solid #475569;
+            background: #1e293b;
+            color: white;
+            font-size: 16px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+        button {
+            width: 100%;
+            padding: 14px;
+            border-radius: 10px;
+            border: none;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-play {
+            background-color: #22c55e;
+            color: white;
+        }
+        .btn-play:active { background-color: #16a34a; }
+        .btn-cashout {
+            background-color: #eab308;
+            color: black;
+            display: none;
+        }
     </style>
 </head>
 <body>
-    <div class="multiplier" id="display">1.00x</div>
-    <input type="number" id="bet" placeholder="Ставка">
-    <button onclick="startRound()">Сделать ставку</button>
+
+    <div class="container">
+        <h2>🚀 STARXPLAY</h2>
+        
+        <div class="balance-card">
+            Баланс: <span id="balance">100</span> фишек
+        </div>
+
+        <div class="game-screen">
+            <div class="flight-line"></div>
+            <div class="rocket-container" id="rocketContainer">🚀</div>
+            <div class="multiplier" id="multiplier">1.00x</div>
+            <div class="status-text" id="statusText">Сделайте ставку</div>
+        </div>
+
+        <div class="controls">
+            <input type="number" id="betInput" placeholder="Сумма ставки" value="10">
+            <button class="btn-play" id="playBtn" onclick="startGame()">Сделать ставку</button>
+            <button class="btn-cashout" id="cashoutBtn" onclick="cashOut()">Забрать выигрыш</button>
+        </div>
+       </div>
 
     <script>
-        let isRunning = false;
-        // Генерируем случайный результат прямо в браузере (для теста)
-        // В реальном проекте мы будем брать его с сервера
-        function startRound() {
-            if(isRunning) return;
-            isRunning = true;
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        let balance = 100;
+        let currentBet = 0;
+        let multiplier = 1.00;
+        let gameInterval = null;
+        let isPlaying = false;
+        let crashPoint = 1.00;
+
+        const balanceEl = document.getElementById('balance');
+        const multiplierEl = document.getElementById('multiplier');
+        const statusTextEl = document.getElementById('statusText');
+        const rocketContainer = document.getElementById('rocketContainer');
+        const betInput = document.getElementById('betInput');
+        const playBtn = document.getElementById('playBtn');
+        const cashoutBtn = document.getElementById('cashoutBtn');
+
+        function startGame() {
+            let bet = parseInt(betInput.value);
+            if (isNaN(bet)  bet <= 0  bet > balance) {
+                alert('Неверная сумма ставки!');
+                return;
+            }
+
+            balance -= bet;
+            currentBet = bet;
+            balanceEl.innerText = balance;
+
+            playBtn.style.display = 'none';
+            cashoutBtn.style.display = 'block';
+            betInput.disabled = true;
+
+            multiplier = 1.00;
+            isPlaying = true;
+            statusTextEl.innerText = "Ракета летит...";
             
-            // Логика казино: шанс краша на 1.1x намного выше, чем на 5.0x
-            let u = Math.random();
-            let crashPoint = (0.97 / (1 - u)).toFixed(2);
-            if (crashPoint > 10) crashPoint = 10.00;
-            
-            let count = 1.00;
-            let display = document.getElementById('display');
-            
-            let interval = setInterval(() => {
-                count += 0.01;
-                display.innerText = count.toFixed(2) + 'x';
+            crashPoint = parseFloat((Math.random() * 4 + 1.1).toFixed(2));
+
+            let progress = 0;
+            gameInterval = setInterval(() => {
+                multiplier += 0.03;
+                multiplierEl.innerText = multiplier.toFixed(2) + 'x';
                 
-                if(count >= crashPoint) {
-                    clearInterval(interval);
-                    display.innerText = 'CRASH: ' + crashPoint + 'x';
-                    isRunning = false;
-                    setTimeout(() => display.innerText = '1.00x', 2000);
+                // Плавное движение ракеты по диагонали вверх вправо
+                if (progress < 180) {
+                    progress += 1.5;
                 }
-            }, 50);
+                rocketContainer.style.transform = translate(${progress}px, -${progress * 0.7}px) rotate(25deg);
+
+                if (multiplier >= crashPoint) {
+                    endGame(false);
+                }
+            }, 100);
+        }
+
+        function cashOut() {
+            if (!isPlaying) return;
+            let winAmount = Math.floor(currentBet * multiplier);
+            balance += winAmount;
+            balanceEl.innerText = balance;
+            endGame(true, winAmount);
+        }
+
+        function endGame(success, win = 0) {
+            clearInterval(gameInterval);
+            isPlaying = false;
+            cashoutBtn.style.display = 'none';
+            playBtn.style.display = 'block';
+            betInput.disabled = false;
+
+            if (success) {
+                statusTextEl.innerText = Вы выиграли ${win} фишек! 🎉;
+                multiplierEl.style.color = '#22c55e';
+                rocketContainer.innerHTML = '🌕';
+            } else {
+                statusTextEl.innerText = Краш! Ракета улетела 💥;
+                multiplierEl.style.color = '#ef4444';
+                rocketContainer.innerHTML = '💥';
+            }
+
+            // Возврат ракеты на старт через 3 секунды
+            setTimeout(() => {
+                multiplierEl.style.color = '#38bdf8';
+                multiplierEl.innerText = '1.00x';
+                rocketContainer.innerHTML = '🚀';
+                rocketContainer.style.transform = 'translate(0px, 0px) rotate(0deg)';
+                statusTextEl.innerText = "Сделайте ставку";
+            }, 3000);
         }
     </script>
 </body>
-</html>
+</html> 
