@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { background: #0d0415; color: #fff; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        .multiplier { font-size: 80px; font-weight: 900; color: #b06ab3; }
+        input { padding: 15px; border-radius: 10px; border: none; margin: 20px 0; width: 80%; text-align: center; }
+        button { padding: 15px 40px; border-radius: 10px; border: none; background: #667eea; color: white; font-weight: bold; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="multiplier" id="display">1.00x</div>
+    <input type="number" id="bet" placeholder="Ставка">
+    <button onclick="startRound()">Сделать ставку</button>
+
+    <script>
+        let isRunning = false;
+        // Генерируем случайный результат прямо в браузере (для теста)
+        // В реальном проекте мы будем брать его с сервера
+        function startRound() {
+            if(isRunning) return;
+            isRunning = true;
+            
+            // Логика казино: шанс краша на 1.1x намного выше, чем на 5.0x
+            let u = Math.random();
+            let crashPoint = (0.97 / (1 - u)).toFixed(2);
+            if (crashPoint > 10) crashPoint = 10.00;
+            
+            let count = 1.00;
+            let display = document.getElementById('display');
+            
+            let interval = setInterval(() => {
+                count += 0.01;
+                display.innerText = count.toFixed(2) + 'x';
+                
+                if(count >= crashPoint) {
+                    clearInterval(interval);
+                    display.innerText = 'CRASH: ' + crashPoint + 'x';
+                    isRunning = false;
+                    setTimeout(() => display.innerText = '1.00x', 2000);
+                }
+            }, 50);
+        }
+    </script>
+</body>
+</html>
