@@ -2645,6 +2645,105 @@ console.log(
             modal.style.display = 'none';
         });
     });
+    // Получаем user_id из Telegram WebApp
+const tg = window.Telegram?.WebApp;
+const userId = tg?.initDataUnsafe?.user?.id || 123456789; // Тестовый ID на случай проверки в браузере
+
+// Функция запроса баланса с сервера
+async function fetchUserBalance() {
+    try {
+        const response = await fetch('/api/balance', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_id: userId })
+        });
+        const data = await response.json();
+        if (data.balance !== undefined) {
+            // Находим на странице элемент с балансом (например, с id="balanceVal") и обновляем его
+            const balanceElement = document.getElementById('balanceVal');
+            if (balanceElement) {
+                balanceElement.innerText = data.balance;
+            }
+        }
+    } catch (e) {
+        console.error("Ошибка при получении баланса:", e);
+    }
+}
+
+// Функция изменения баланса (ставка или выигрыш)
+// amount: отрицательное число (например, -100) для ставки, положительное (+200) для выигрыша
+async function updateBalanceOnServer(amount) {
+    try {
+        const response = await fetch('/api/update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_id: userId, amount: amount })
+        });
+        const data = await response.json();
+        if (data.success) {
+            const balanceElement = document.getElementById('balanceVal');
+            if (balanceElement) {
+                balanceElement.innerText = data.balance;
+            }
+            return true;
+        }
+    } catch (e) {
+        console.error("Ошибка при обновлении баланса:", e);
+    }
+    return false;
+}
+
+// Загружаем баланс при открытии игры
+window.addEventListener('DOMContentLoaded', () => {
+    fetchUserBalance();
+});
+</script>
+<!-- Блок вывода средств на TON (Tonkeeper) -->
+<div id="withdraw-section" style="margin-top: 20px; background: #222; padding: 15px; border-radius: 10px; text-align: center; color: #fff;">
+    <h3 style="font-size: 16px; margin-bottom: 10px;">Вывод средств (TON)</h3>
+    <p style="font-size: 12px; color: #aaa; margin-bottom: 10px;">Минимум для вывода: 50 звезд</p>
+    <input type="text" id="ton-wallet-input" placeholder="Введите ваш TON-кошелек" style="width: 90%; padding: 8px; border-radius: 6px; border: none; margin-bottom: 10px; background: #333; color: #fff;">
+    <input type="number" id="withdraw-amount-input" placeholder="Количество звезд (от 50)" style="width: 90%; padding: 8px; border-radius: 6px; border: none; margin-bottom: 10px; background: #333; color: #fff;">
+    <button id="withdraw-btn" style="background: #0088cc; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; width: 100%; font-weight: bold;">Запросить вывод</button>
+</div>
+
+<script>
+    document.getElementById('withdraw-btn').addEventListener('click', async () => {
+        const wallet = document.getElementById('ton-wallet-input').value;
+        const amount = parseInt(document.getElementById('withdraw-amount-input').value);
+
+        if (!wallet) {
+            alert("Введите адрес TON-кошелька!");
+            return;
+        }
+
+        if (isNaN(amount) || amount < 50) {
+            alert("Минимальная сумма вывода должна быть от 50 звезд!");
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/withdraw', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: userId, amount: amount, wallet: wallet })
+            });
+            const data = await response.json();
+            
+            if (data.success) {
+                alert("Заявка на вывод успешно создана!");
+                if (data.balance !== undefined) {
+                    const balanceElement = document.getElementById('balanceVal');
+                    if (balanceElement) balanceElement.innerText = data.balance;
+                }
+            } else {
+                alert("Ошибка: " + (data.error || "Не удалось выполнить вывод"));
+            }
+        } catch (e) {
+            console.error("Ошибка запроса вывода:", e);
+            alert("Ошибка соединения с сервером.");
+        }
+    });
 </script>
 <!-- reserve-00001: StarXPlay Pro future module slot -->
 <!-- reserve-00002: StarXPlay Pro future module slot -->
