@@ -2593,23 +2593,52 @@ console.log(
   "StarXPlay Pro: SVG path trajectory loaded."
 );
 </script>
-<!-- Окно соглашения -->
+<!-- Окно пользовательского соглашения с галочками -->
 <div id="terms-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); display: none; justify-content: center; align-items: center; z-index: 9999;">
-    <div style="background: #1a1a1a; color: #ffffff; padding: 20px; border-radius: 12px; width: 85%; max-width: 400px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
-        <h2 style="margin-bottom: 15px; font-size: 20px;">Пользовательское соглашение</h2>
-        <p style="font-size: 14px; line-height: 1.5; margin-bottom: 20px; color: #cccccc;">Добро пожаловать в STARXPLAY! Продолжая использовать приложение и совершая ставки, вы подтверждаете, что вам исполнилось 18 лет, вы принимаете правила сервиса и осознаете все риски, связанные с игровым процессом.</p>
-        <button id="accept-terms-btn" style="background: #4CAF50; color: white; border: none; padding: 12px 20px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%;">Понимаю и принимаю</button>
+    <div style="background: #1a1a1a; color: #ffffff; padding: 25px; border-radius: 12px; width: 85%; max-width: 400px; text-align: left; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
+        <h2 style="margin-bottom: 15px; font-size: 20px; text-align: center;">Правила сервиса</h2>
+        <p style="font-size: 13px; line-height: 1.4; margin-bottom: 20px; color: #cccccc; text-align: center;">Пожалуйста, подтвердите следующие условия для продолжения:</p>
+        
+        <label style="display: flex; align-items: center; margin-bottom: 15px; cursor: pointer; font-size: 14px;">
+            <input type="checkbox" id="check-age" style="width: 18px; height: 18px; margin-right: 10px; cursor: pointer;">
+            Мне исполнилось 18 лет
+        </label>
+
+        <label style="display: flex; align-items: center; margin-bottom: 20px; cursor: pointer; font-size: 14px;">
+            <input type="checkbox" id="check-rules" style="width: 18px; height: 18px; margin-right: 10px; cursor: pointer;">
+            Я согласен с правилами сервиса
+        </label>
+
+        <button id="accept-terms-btn" style="background: #4CAF50; color: white; border: none; padding: 12px 20px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%; opacity: 0.5; pointer-events: none;" disabled>Продолжить</button>
     </div>
 </div>
 
 <script>
     window.addEventListener('DOMContentLoaded', () => {
         const modal = document.getElementById('terms-modal');
+        const checkAge = document.getElementById('check-age');
+        const checkRules = document.getElementById('check-rules');
         const acceptBtn = document.getElementById('accept-terms-btn');
 
         if (!localStorage.getItem('terms_accepted')) {
             modal.style.display = 'flex';
         }
+
+        // Функция проверки обеих галочек
+        function validateForm() {
+            if (checkAge.checked && checkRules.checked) {
+                acceptBtn.style.opacity = '1';
+                acceptBtn.style.pointerEvents = 'auto';
+                acceptBtn.removeAttribute('disabled');
+            } else {
+                acceptBtn.style.opacity = '0.5';
+                acceptBtn.style.pointerEvents = 'none';
+                acceptBtn.setAttribute('disabled', 'true');
+            }
+        }
+
+        checkAge.addEventListener('change', validateForm);
+        checkRules.addEventListener('change', validateForm);
 
         acceptBtn.addEventListener('click', () => {
             localStorage.setItem('terms_accepted', 'true');
