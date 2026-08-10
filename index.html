@@ -2674,7 +2674,7 @@ async function fetchUserBalance() {
 // amount: отрицательное число (например, -100) для ставки, положительное (+200) для выигрыша
 async function updateBalanceOnServer(amount) {
     try {
-        const response = await fetch('http://localhost:8080/api/update_balance', {
+        const response = await fetch('http://192.168.18.33:8080/api/update_balance', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ user_id: userId, amount: amount })
