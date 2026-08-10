@@ -2715,84 +2715,14 @@ window.addEventListener('DOMContentLoaded', () => {
         <button id="withdraw-btn" style="background: #0088cc; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; font-size: 15px;">Запросить вывод</button>
     </div>
 </div>
-
-<script>
-    // Ищем элемент с балансом (где звезды 1902)
-    window.addEventListener('DOMContentLoaded', () => {
-        // Пробуем найти кнопку или блок баланса по классу, структуре или тексту (обычно это элемент со звездой)
-        // Если у твоего блока баланса есть id, например id="balanceContainer", лучше указать его. 
-        // Сейчас мы сделаем универсальный поиск по клику на элемент, содержащий иконку звезды или цифру баланса.
-        
-        const balanceElements = document.querySelectorAll('*');
-        balanceElements.forEach(el => {
-            // Ищем блок, похожий на плашку баланса (например, содержит число звезд)
-            if (el.innerText && el.innerText.includes('190') || (el.innerHTML && el.innerHTML.includes('fa-star') && el.innerHTML.includes('1902'))) {
-                // Если кликают на баланс — открываем окно вывода
-                el.style.cursor = 'pointer';
-                el.addEventListener('click', () => {
-                    document.getElementById('withdraw-modal').style.display = 'flex';
-                });
-            }
-        });
-
-        // Также можно привязать открытие к конкретному ID, если задашь его в своей верстке. 
-        // Дополнительно вешаем клик на закрытие крестиком
-        document.getElementById('close-withdraw-modal').addEventListener('click', () => {
-            document.getElementById('withdraw-modal').style.display = 'none';
-        });
-
-        // Отправка заявки на сервер
-        document.getElementById('withdraw-btn').addEventListener('click', async () => {
-            const wallet = document.getElementById('ton-wallet-input').value;
-            const amount = parseInt(document.getElementById('withdraw-amount-input').value);
-
-            if (!wallet) {
-                alert("Введите адрес TON-кошелька!");
-                return;
-            }
-
-            if (isNaN(amount) || amount < 50) {
-                alert("Минимальная сумма вывода должна быть от 50 звезд!");
-                return;
-            }
-
-            try {
-                const response = await fetch('/api/withdraw', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ user_id: userId, amount: amount, wallet: wallet })
-                });
-                const data = await response.json();
-                
-                if (data.success) {
-                    alert("Заявка на вывод успешно создана!");
-                    document.
-                    getElementById('withdraw-modal').style.display = 'none';
-                    if (data.balance !== undefined) {
-                        const balanceElement = document.getElementById('balanceVal');
-                        if (balanceElement) balanceElement.innerText = data.balance;
-                    }
-                } else {
-                    alert("Ошибка: " + (data.error || "Не удалось выполнить вывод"));
-                }
-            } catch (e) {
-                console.error("Ошибка запроса вывода:", e);
-                alert("Ошибка соединения с сервером.");
-            }
-        });
-    });
-</script>
 <script>
     window.addEventListener('DOMContentLoaded', () => {
-        // Ищем конкретно элемент баланса (по числу звезд или ID, если задан)
-        // Сделаем надежно: вешаем клик только на блок, где отображается баланс со звездами
-        const allElements = document.querySelectorAll('div, span, button');
-        allElements.forEach(el => {
-            // Проверяем, что это именно плашка баланса (содержит число 1902 или иконку звезды баланса)
+        // Открытие по клику на баланс
+        document.querySelectorAll('div, span, button').forEach(el => {
             if (el.innerText && el.innerText.trim() === '1902' && !el.id.includes('modal')) {
                 el.style.cursor = 'pointer';
                 el.addEventListener('click', (e) => {
-                    e.stopPropagation(); // Останавливаем всплытие, чтобы клик не шел дальше
+                    e.stopPropagation();
                     document.getElementById('withdraw-modal').style.display = 'flex';
                 });
             }
@@ -2803,7 +2733,7 @@ window.addEventListener('DOMContentLoaded', () => {
             document.getElementById('withdraw-modal').style.display = 'none';
         });
 
-        // Отправка запроса на вывод
+        // Запрос на вывод
         document.getElementById('withdraw-btn').addEventListener('click', async () => {
             const wallet = document.getElementById('ton-wallet-input').value;
             const amount = parseInt(document.getElementById('withdraw-amount-input').value);
