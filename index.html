@@ -10273,7 +10273,7 @@ window.addEventListener('DOMContentLoaded', () => {
 <!-- reserve-07403: StarXPlay Pro future module slot -->
 
 <script>
-/* ===== STARXPLAY COMMON SERVER =====
+/* ===== STARXPLAY COMMON SERVER — CASHOUT + RESULT FIX =====
    Общий сервер, общий коэффициент, виртуальные фишки.
 */
 const SX_API = "https://72.56.92.17";
@@ -10289,12 +10289,16 @@ let sxMyBet = null;
 let sxAuthenticated = false;
 let sxLastRound = null;
 let sxLastPhase = null;
+let sxResultRound = null;
+let sxReconnectTimer = null;
 
 async function sxRequest(path, options = {}) {
   const response = await fetch(SX_API + path, options);
   let data = {};
   try { data = await response.json(); } catch (_) {}
-  if (!response.ok) throw new Error(data.detail || `HTTP ${response.status}`);
+  if (!response.ok) {
+    throw new Error(data.detail || data.error || `HTTP ${response.status}`);
+  }
   return data;
 }
 
@@ -10309,11 +10313,9 @@ async function sxAuth() {
   if (!sxInitData) {
     sxAuthenticated = false;
     sxSetBalance(0);
-    if (playBtn) {
-      playBtn.disabled = true;
-      playBtn.style.opacity = ".55";
-    }
-    if (statusView) statusView.textContent = "Откройте игру через Telegram";
+    playBtn.disabled = true;
+    playBtn.style.opacity = ".55";
+    statusView.textContent = "Откройте игру через Telegram";
     return;
   }
 
@@ -10323,12 +10325,17 @@ async function sxAuth() {
       headers: {"Content-Type":"application/json"},
       body: JSON.stringify({init_data: sxInitData})
     });
+
     sxAuthenticated = true;
     sxSetBalance(me.balance || 0);
+    playBtn.disabled = false;
+    playBtn.style.opacity = "1";
   } catch (e) {
     sxAuthenticated = false;
-    if (statusView) statusView.textContent = "Ошибка Telegram-входа";
-    console.error(e);
+    playBtn.disabled = true;
+    playBtn.style.opacity = ".55";
+    statusView.textContent = "Ошибка Telegram-входа";
+    console.error("auth", e);
   }
 }
 
@@ -10337,10 +10344,33 @@ function sxFindMyBet(state) {
   return state.bets.find(b => Number(b.user_id) === Number(sxUser.id)) || null;
 }
 
+function sxBetIsCashed(bet) {
+  return bet && (
+    bet.status === "cashed_out" ||
+    bet.status === "won" ||
+    Number(bet.payout || 0) > 0 ||
+    Number(bet.cashout_multiplier || 0) > 0
+  );
+}
+
+function sxBetIsActive(bet, state) {
+  if (!bet || !state) return false;
+  if (sxBetIsCashed(bet)) return false;
+
+  // Поддерживаем разные названия статусов backend.
+  if (bet.status === "active" || bet.status === "placed" || bet.status === "pending") {
+    return state.phase === "waiting" || state.phase === "flying";
+  }
+
+  // Если status отсутствует, но ставка есть в текущем flying-раунде,
+  // считаем её активной до cash-out/краша.
+  return !bet.status && state.phase === "flying";
+}
+
 function sxRocket(multiplier) {
   const m = Math.max(1, Number(multiplier || 1));
   currentMultiplier = m;
-  if (multiplierView) multiplierView.textContent = m.toFixed(2) + "x";
+  multiplierView.textContent = m.toFixed(2) + "x";
 
   const progress = Math.max(0, Math.min(1, Math.log(m) / Math.log(5)));
   if (typeof setTrailProgress === "function") setTrailProgress(progress);
@@ -10353,11 +10383,66 @@ function sxStats(state) {
   const bank = bets.reduce((s,b) => s + Number(b.amount || 0), 0);
   const maxWin = bets.reduce((m,b) => Math.max(m, Number(b.payout || 0)), 0);
 
-  if (statBets) statBets.textContent = String(bets.length);
-  if (statPlayers) statPlayers.textContent = String(players);
-  if (statBank) statBank.textContent = String(bank);
-  if (statMaxWin) statMaxWin.textContent = String(maxWin);
-  if (statRound) statRound.textContent = "#" + String(state.round_id || 0);
+  statBets.textContent = String(bets.length);
+  statPlayers.textContent = String(players);
+  statBank.textContent = String(bank);
+  statMaxWin.textContent = String(maxWin);
+  statRound.textContent = "#" + String(state.round_id || 0);
+
+  const now = new Date();
+  statTime.textContent = now.toLocaleTimeString("ru-RU", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit"
+  });
+}
+
+function sxShowWin(bet, state, immediatePayout = null, immediateMultiplier = null) {
+  if (!bet || sxResultRound === state.round_id) return;
+
+  const payout = Number(
+    immediatePayout ??
+    bet.payout ??
+    0
+  );
+
+  if (payout <= 0) return;
+
+  activeBet = Number(bet.amount || 0);
+  currentMultiplier = Number(
+    immediateMultiplier ??
+    bet.cashout_multiplier ??
+    state.multiplier ??
+    1
+  );
+
+  resultCard.classList.remove("show", "loss");
+  if (typeof showResultCard === "function") {
+    showResultCard(true, payout);
+  }
+
+  statusView.textContent = `ВЫИГРЫШ +${payout} ⭐`;
+  roundStatusText.textContent = "ВЫИГРЫШ";
+  multiplierView.style.color = "#22c55e";
+  sxResultRound = state.round_id;
+}
+
+function sxShowLoss(bet, state) {
+  if (!bet || sxResultRound === state.round_id) return;
+  if (sxBetIsCashed(bet)) return;
+
+  activeBet = Number(bet.amount || 0);
+  currentMultiplier = Number(state.multiplier || 1);
+
+  resultCard.classList.remove("show", "loss");
+  if (typeof showResultCard === "function") {
+    showResultCard(false, activeBet);
+  }
+
+  statusView.textContent = "ПРОИГРЫШ 💥";
+  roundStatusText.textContent = "РАУНД ЗАВЕРШЁН";
+  multiplierView.style.color = "#ef4444";
+  sxResultRound = state.round_id;
 }
 
 function sxRender(state) {
@@ -10376,62 +10461,103 @@ function sxRender(state) {
     const left = Math.max(0, Math.ceil(Number(state.seconds_left || 0)));
 
     gameActive = false;
-    if (roundStatusText) roundStatusText.textContent = `СТАРТ ЧЕРЕЗ ${left}`;
-    if (statusView) {
-      statusView.textContent = sxMyBet
-        ? `Ставка ${sxMyBet.amount} фишек принята`
-        : `Следующий раунд через ${left} сек.`;
+    roundStatusText.textContent = `СТАРТ ЧЕРЕЗ ${left}`;
+
+    if (sxMyBet) {
+      statusView.textContent = `Ставка ${Number(sxMyBet.amount || 0)} ⭐ принята`;
+    } else {
+      statusView.textContent = `Следующий раунд через ${left} сек.`;
     }
 
-    if (playBtn) {
-      playBtn.style.display = sxMyBet ? "none" : "block";
-      playBtn.disabled = !sxAuthenticated || Boolean(sxMyBet);
-    }
-    if (cashBtn) cashBtn.style.display = "none";
-    if (betField) betField.disabled = Boolean(sxMyBet);
+    multiplierView.style.color = "#ffffff";
+    rocket.className = "rocket";
+    rocket.style.opacity = "1";
 
-    if (prevRound !== state.round_id && typeof resetRocket === "function") {
-      resetRocket();
+    cashBtn.style.display = "none";
+    playBtn.style.display = sxMyBet ? "none" : "block";
+    betField.disabled = Boolean(sxMyBet);
+
+    playBtn.disabled = !sxAuthenticated || Boolean(sxMyBet);
+    playBtn.style.opacity = sxAuthenticated ? "1" : ".55";
+
+    if (prevRound !== state.round_id) {
+      sxResultRound = null;
+      resultCard.classList.remove("show", "loss");
+      multiplierView.style.color = "#ffffff";
+      if (typeof resetRocket === "function") resetRocket();
+      winPreview.textContent = "0";
     }
   }
 
   if (state.phase === "flying") {
     gameActive = true;
-    if (rocket) rocket.className = "rocket flying";
-    if (roundStatusText) roundStatusText.textContent = "РАУНД АКТИВЕН";
-    if (statusView) statusView.textContent = "Ракета набирает высоту...";
-    if (playBtn) playBtn.style.display = "none";
-    if (betField) betField.disabled = true;
+    rocket.className = "rocket flying";
+    rocket.style.opacity = "1";
+    roundStatusText.textContent = "РАУНД АКТИВЕН";
+    betField.disabled = true;
+    playBtn.style.display = "none";
 
-    if (sxMyBet?.status === "active") {
-      if (cashBtn) cashBtn.style.display = "block";
+    const active = sxBetIsActive(sxMyBet, state);
+
+    if (active) {
       activeBet = Number(sxMyBet.amount || 0);
-      if (winPreview) {
-        winPreview.textContent = Math.floor(
-          activeBet * Number(state.multiplier || 1)
-        );
-      }
-    } else if (cashBtn) {
+      const potential = Math.floor(activeBet * Number(state.multiplier || 1));
+
+      winPreview.textContent = String(potential);
+      cashBtn.style.display = "block";
+      cashBtn.disabled = false;
+
+      // Делаем кнопку явно заметной.
+      cashBtn.textContent = "";
+      cashBtn.innerHTML = `ЗАБРАТЬ <span id="winPreview">${potential}</span> ⭐`;
+
+      // После innerHTML обновляем ссылку на элемент для следующих тиков.
+      window.winPreview = cashBtn.querySelector("#winPreview");
+
+      statusView.textContent = `Можно забрать ${potential} ⭐`;
+    } else if (sxBetIsCashed(sxMyBet)) {
       cashBtn.style.display = "none";
+      statusView.textContent = "Ставка уже забрана";
+      sxShowWin(sxMyBet, state);
+    } else {
+      cashBtn.style.display = "none";
+      statusView.textContent = "Раунд идёт — ставка не была сделана";
     }
   }
 
   if (state.phase === "crashed") {
     gameActive = false;
-    if (cashBtn) cashBtn.style.display = "none";
-    if (playBtn) playBtn.style.display = "none";
-    if (betField) betField.disabled = true;
-    if (rocket) {
-      rocket.classList.remove("flying");
-      rocket.style.opacity = ".35";
+    cashBtn.style.display = "none";
+    playBtn.style.display = "none";
+    betField.disabled = true;
+
+    rocket.classList.remove("flying");
+    rocket.style.opacity = ".35";
+    roundStatusText.textContent = "РАУНД ЗАВЕРШЁН";
+
+    if (sxMyBet) {
+      if (sxBetIsCashed(sxMyBet)) {
+        sxShowWin(sxMyBet, state);
+      } else {
+        sxShowLoss(sxMyBet, state);
+      }
+    } else {
+      statusView.textContent = "КРАШ 💥";
+      multiplierView.style.color = "#ef4444";
     }
-    if (roundStatusText) roundStatusText.textContent = "РАУНД ЗАВЕРШЁН";
-    if (statusView) statusView.textContent = "КРАШ 💥";
-    if (multiplierView) multiplierView.style.color = "#ef4444";
   }
 
   sxLastRound = state.round_id;
   sxLastPhase = state.phase;
+}
+
+async function sxRefreshState() {
+  try {
+    const state = await sxRequest("/api/state");
+    sxRender(state);
+  } catch (e) {
+    console.error("state refresh", e);
+  }
 }
 
 async function sxStartGame() {
@@ -10441,7 +10567,7 @@ async function sxStartGame() {
   }
 
   if (!sxState || sxState.phase !== "waiting") {
-    alert("Дождитесь следующего раунда.");
+    alert("Ставки сейчас закрыты. Дождитесь следующего раунда.");
     return;
   }
 
@@ -10451,13 +10577,20 @@ async function sxStartGame() {
   }
 
   const amount = Math.floor(Number(betField.value));
+
   if (!Number.isFinite(amount) || amount <= 0) {
     alert("Введите правильную сумму ставки.");
     return;
   }
 
+  if (amount > userBalance) {
+    alert("Недостаточно виртуальных фишек.");
+    return;
+  }
+
   try {
     playBtn.disabled = true;
+
     const result = await sxRequest("/api/bet", {
       method: "POST",
       headers: {"Content-Type":"application/json"},
@@ -10468,16 +10601,27 @@ async function sxStartGame() {
     });
 
     sxSetBalance(result.balance);
-    statusView.textContent = `Ставка ${amount} фишек принята`;
+    statusView.textContent = `Ставка ${amount} ⭐ принята`;
+    playBtn.style.display = "none";
+    betField.disabled = true;
+
+    // Не ждём следующий websocket-пакет — сразу перечитываем состояние.
+    await sxRefreshState();
   } catch (e) {
     alert(e.message);
-  } finally {
     playBtn.disabled = false;
   }
 }
 
 async function sxCashOut() {
-  if (!sxAuthenticated || sxMyBet?.status !== "active") return;
+  if (
+    !sxAuthenticated ||
+    !sxState ||
+    sxState.phase !== "flying" ||
+    !sxBetIsActive(sxMyBet, sxState)
+  ) {
+    return;
+  }
 
   try {
     cashBtn.disabled = true;
@@ -10489,38 +10633,63 @@ async function sxCashOut() {
     });
 
     sxSetBalance(result.balance);
-    statusView.textContent = `Выигрыш +${result.payout} фишек`;
-    if (typeof showResultCard === "function") {
-      activeBet = Number(sxMyBet.amount || 0);
-      currentMultiplier = Number(result.multiplier || 1);
-      showResultCard(true, Number(result.payout || 0));
-    }
+
+    // Показываем результат мгновенно, ещё до websocket-обновления.
+    const betForResult = sxMyBet || {amount: activeBet};
+    sxShowWin(
+      betForResult,
+      sxState,
+      Number(result.payout || 0),
+      Number(result.multiplier || sxState.multiplier || 1)
+    );
+
+    cashBtn.style.display = "none";
+    await sxRefreshState();
   } catch (e) {
-    alert(e.message);
+    // Если сервер уже успел сделать crash, просто обновим состояние.
+    await sxRefreshState();
+    if (sxState?.phase === "flying") {
+      alert(e.message);
+    }
   } finally {
     cashBtn.disabled = false;
   }
 }
 
 function sxConnect() {
-  sxSocket = new WebSocket(SX_WS);
+  clearTimeout(sxReconnectTimer);
 
-  sxSocket.onmessage = (event) => {
+  try {
+    sxSocket = new WebSocket(SX_WS);
+  } catch (_) {
+    sxReconnectTimer = setTimeout(sxConnect, 1500);
+    return;
+  }
+
+  sxSocket.onopen = () => {
+    console.log("STARXPLAY common server connected");
+  };
+
+  sxSocket.onmessage = event => {
     try {
       const data = JSON.parse(event.data);
       if (data.type !== "pong") sxRender(data);
     } catch (e) {
-      console.error(e);
+      console.error("ws", e);
     }
   };
 
+  sxSocket.onerror = () => {
+    statusView.textContent = "Ошибка соединения с сервером";
+  };
+
   sxSocket.onclose = () => {
-    if (statusView) statusView.textContent = "Переподключение к серверу...";
-    setTimeout(sxConnect, 1500);
+    statusView.textContent = "Переподключение к серверу...";
+    sxReconnectTimer = setTimeout(sxConnect, 1500);
   };
 }
 
-/* Перехватываем старые локальные кнопки */
+/* Старый локальный random-game больше не используется. */
 window.startGame = sxStartGame;
 window.cashOut = sxCashOut;
 
@@ -10534,6 +10703,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   sxSetBalance(0);
   await sxAuth();
+  await sxRefreshState();
   sxConnect();
 
   setInterval(() => {
