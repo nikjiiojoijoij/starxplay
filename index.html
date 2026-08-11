@@ -1872,51 +1872,40 @@ function setMaxBet() {
    ========================================================= */
 
 function generateCrashPoint() {
-  const random =
-    Math.random();
+  /*
+    ТЕСТОВЫЙ АЛГОРИТМ ДЛЯ ВИРТУАЛЬНЫХ ФИШЕК.
 
-  if (
-    random < 0.42
-  ) {
+    Распределение раундов:
+    1.00x–1.99x  = 50%
+    2.00x–2.99x  = 35%
+    3.00x–3.99x  = 8%
+    4.00x–4.99x  = 7%
+
+    Итого 85% раундов заканчиваются раньше 3x.
+  */
+
+  const random = Math.random();
+
+  if (random < 0.50) {
     return Number(
-      (
-        1.20 +
-        Math.random() *
-        1.15
-      ).toFixed(2)
+      (1.00 + Math.random() * 0.99).toFixed(2)
     );
   }
 
-  if (
-    random < 0.78
-  ) {
+  if (random < 0.85) {
     return Number(
-      (
-        2.35 +
-        Math.random() *
-        2.40
-      ).toFixed(2)
+      (2.00 + Math.random() * 0.99).toFixed(2)
     );
   }
 
-  if (
-    random < 0.94
-  ) {
+  if (random < 0.93) {
     return Number(
-      (
-        4.75 +
-        Math.random() *
-        4.50
-      ).toFixed(2)
+      (3.00 + Math.random() * 0.99).toFixed(2)
     );
   }
 
   return Number(
-    (
-      9.25 +
-      Math.random() *
-      10.00
-    ).toFixed(2)
+    (4.00 + Math.random() * 0.99).toFixed(2)
   );
 }
 
@@ -2066,13 +2055,17 @@ function gameLoop(
     ) /
     1000;
 
+  /*
+    Более медленный рост коэффициента.
+    В начале он идёт спокойно, затем постепенно ускоряется.
+  */
   currentMultiplier =
     1 +
     elapsed *
-    0.34 +
+    0.22 +
     elapsed *
     elapsed *
-    0.026;
+    0.014;
 
   if (
     currentMultiplier >
@@ -2097,15 +2090,15 @@ function gameLoop(
     potentialWin;
 
   /*
-    0 -> 1 примерно за 8 секунд.
-    Используем плавную функцию,
-    но координаты всегда берутся из SVG path.
+    Ракета теперь летит заметно медленнее.
+    Полный визуальный путь занимает около 12.5 секунд,
+    а движение остаётся плавным и слегка ускоряется.
   */
 
   const rawProgress =
     Math.min(
       elapsed /
-      8,
+      12.5,
       1
     );
 
@@ -2114,7 +2107,7 @@ function gameLoop(
     Math.pow(
       1 -
       rawProgress,
-      1.12
+      1.08
     );
 
   setTrailProgress(
@@ -10278,5 +10271,278 @@ window.addEventListener('DOMContentLoaded', () => {
 <!-- reserve-07401: StarXPlay Pro future module slot -->
 <!-- reserve-07402: StarXPlay Pro future module slot -->
 <!-- reserve-07403: StarXPlay Pro future module slot -->
+
+<script>
+/* ===== STARXPLAY COMMON SERVER =====
+   Общий сервер, общий коэффициент, виртуальные фишки.
+*/
+const SX_API = "https://72.56.92.17";
+const SX_WS  = "wss://72.56.92.17/ws";
+
+const sxTg = window.Telegram?.WebApp || null;
+const sxInitData = sxTg?.initData || "";
+const sxUser = sxTg?.initDataUnsafe?.user || null;
+
+let sxSocket = null;
+let sxState = null;
+let sxMyBet = null;
+let sxAuthenticated = false;
+let sxLastRound = null;
+let sxLastPhase = null;
+
+async function sxRequest(path, options = {}) {
+  const response = await fetch(SX_API + path, options);
+  let data = {};
+  try { data = await response.json(); } catch (_) {}
+  if (!response.ok) throw new Error(data.detail || `HTTP ${response.status}`);
+  return data;
+}
+
+function sxSetBalance(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return;
+  userBalance = Math.max(0, Math.floor(n));
+  if (typeof updateBalance === "function") updateBalance();
+}
+
+async function sxAuth() {
+  if (!sxInitData) {
+    sxAuthenticated = false;
+    sxSetBalance(0);
+    if (playBtn) {
+      playBtn.disabled = true;
+      playBtn.style.opacity = ".55";
+    }
+    if (statusView) statusView.textContent = "Откройте игру через Telegram";
+    return;
+  }
+
+  try {
+    const me = await sxRequest("/api/me", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({init_data: sxInitData})
+    });
+    sxAuthenticated = true;
+    sxSetBalance(me.balance || 0);
+  } catch (e) {
+    sxAuthenticated = false;
+    if (statusView) statusView.textContent = "Ошибка Telegram-входа";
+    console.error(e);
+  }
+}
+
+function sxFindMyBet(state) {
+  if (!sxUser || !Array.isArray(state?.bets)) return null;
+  return state.bets.find(b => Number(b.user_id) === Number(sxUser.id)) || null;
+}
+
+function sxRocket(multiplier) {
+  const m = Math.max(1, Number(multiplier || 1));
+  currentMultiplier = m;
+  if (multiplierView) multiplierView.textContent = m.toFixed(2) + "x";
+
+  const progress = Math.max(0, Math.min(1, Math.log(m) / Math.log(5)));
+  if (typeof setTrailProgress === "function") setTrailProgress(progress);
+  if (typeof setRocketProgress === "function") setRocketProgress(progress);
+}
+
+function sxStats(state) {
+  const bets = Array.isArray(state.bets) ? state.bets : [];
+  const players = new Set(bets.map(b => b.user_id)).size;
+  const bank = bets.reduce((s,b) => s + Number(b.amount || 0), 0);
+  const maxWin = bets.reduce((m,b) => Math.max(m, Number(b.payout || 0)), 0);
+
+  if (statBets) statBets.textContent = String(bets.length);
+  if (statPlayers) statPlayers.textContent = String(players);
+  if (statBank) statBank.textContent = String(bank);
+  if (statMaxWin) statMaxWin.textContent = String(maxWin);
+  if (statRound) statRound.textContent = "#" + String(state.round_id || 0);
+}
+
+function sxRender(state) {
+  if (!state?.phase) return;
+
+  const prevRound = sxLastRound;
+  const prevPhase = sxLastPhase;
+
+  sxState = state;
+  sxMyBet = sxFindMyBet(state);
+
+  sxStats(state);
+  sxRocket(state.multiplier);
+
+  if (state.phase === "waiting") {
+    const left = Math.max(0, Math.ceil(Number(state.seconds_left || 0)));
+
+    gameActive = false;
+    if (roundStatusText) roundStatusText.textContent = `СТАРТ ЧЕРЕЗ ${left}`;
+    if (statusView) {
+      statusView.textContent = sxMyBet
+        ? `Ставка ${sxMyBet.amount} фишек принята`
+        : `Следующий раунд через ${left} сек.`;
+    }
+
+    if (playBtn) {
+      playBtn.style.display = sxMyBet ? "none" : "block";
+      playBtn.disabled = !sxAuthenticated || Boolean(sxMyBet);
+    }
+    if (cashBtn) cashBtn.style.display = "none";
+    if (betField) betField.disabled = Boolean(sxMyBet);
+
+    if (prevRound !== state.round_id && typeof resetRocket === "function") {
+      resetRocket();
+    }
+  }
+
+  if (state.phase === "flying") {
+    gameActive = true;
+    if (rocket) rocket.className = "rocket flying";
+    if (roundStatusText) roundStatusText.textContent = "РАУНД АКТИВЕН";
+    if (statusView) statusView.textContent = "Ракета набирает высоту...";
+    if (playBtn) playBtn.style.display = "none";
+    if (betField) betField.disabled = true;
+
+    if (sxMyBet?.status === "active") {
+      if (cashBtn) cashBtn.style.display = "block";
+      activeBet = Number(sxMyBet.amount || 0);
+      if (winPreview) {
+        winPreview.textContent = Math.floor(
+          activeBet * Number(state.multiplier || 1)
+        );
+      }
+    } else if (cashBtn) {
+      cashBtn.style.display = "none";
+    }
+  }
+
+  if (state.phase === "crashed") {
+    gameActive = false;
+    if (cashBtn) cashBtn.style.display = "none";
+    if (playBtn) playBtn.style.display = "none";
+    if (betField) betField.disabled = true;
+    if (rocket) {
+      rocket.classList.remove("flying");
+      rocket.style.opacity = ".35";
+    }
+    if (roundStatusText) roundStatusText.textContent = "РАУНД ЗАВЕРШЁН";
+    if (statusView) statusView.textContent = "КРАШ 💥";
+    if (multiplierView) multiplierView.style.color = "#ef4444";
+  }
+
+  sxLastRound = state.round_id;
+  sxLastPhase = state.phase;
+}
+
+async function sxStartGame() {
+  if (!sxAuthenticated) {
+    alert("Откройте игру через Telegram.");
+    return;
+  }
+
+  if (!sxState || sxState.phase !== "waiting") {
+    alert("Дождитесь следующего раунда.");
+    return;
+  }
+
+  if (sxMyBet) {
+    alert("Ставка на этот раунд уже сделана.");
+    return;
+  }
+
+  const amount = Math.floor(Number(betField.value));
+  if (!Number.isFinite(amount) || amount <= 0) {
+    alert("Введите правильную сумму ставки.");
+    return;
+  }
+
+  try {
+    playBtn.disabled = true;
+    const result = await sxRequest("/api/bet", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({
+        init_data: sxInitData,
+        amount
+      })
+    });
+
+    sxSetBalance(result.balance);
+    statusView.textContent = `Ставка ${amount} фишек принята`;
+  } catch (e) {
+    alert(e.message);
+  } finally {
+    playBtn.disabled = false;
+  }
+}
+
+async function sxCashOut() {
+  if (!sxAuthenticated || sxMyBet?.status !== "active") return;
+
+  try {
+    cashBtn.disabled = true;
+
+    const result = await sxRequest("/api/cashout", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({init_data: sxInitData})
+    });
+
+    sxSetBalance(result.balance);
+    statusView.textContent = `Выигрыш +${result.payout} фишек`;
+    if (typeof showResultCard === "function") {
+      activeBet = Number(sxMyBet.amount || 0);
+      currentMultiplier = Number(result.multiplier || 1);
+      showResultCard(true, Number(result.payout || 0));
+    }
+  } catch (e) {
+    alert(e.message);
+  } finally {
+    cashBtn.disabled = false;
+  }
+}
+
+function sxConnect() {
+  sxSocket = new WebSocket(SX_WS);
+
+  sxSocket.onmessage = (event) => {
+    try {
+      const data = JSON.parse(event.data);
+      if (data.type !== "pong") sxRender(data);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  sxSocket.onclose = () => {
+    if (statusView) statusView.textContent = "Переподключение к серверу...";
+    setTimeout(sxConnect, 1500);
+  };
+}
+
+/* Перехватываем старые локальные кнопки */
+window.startGame = sxStartGame;
+window.cashOut = sxCashOut;
+
+window.addEventListener("DOMContentLoaded", async () => {
+  if (sxTg) {
+    try {
+      sxTg.ready();
+      sxTg.expand();
+    } catch (_) {}
+  }
+
+  sxSetBalance(0);
+  await sxAuth();
+  sxConnect();
+
+  setInterval(() => {
+    if (sxSocket?.readyState === WebSocket.OPEN) {
+      try { sxSocket.send("ping"); } catch (_) {}
+    }
+  }, 20000);
+});
+</script>
+
 </body>
 </html>
